@@ -192,7 +192,7 @@ namespace Instashit
         }
         static async Task Main(string[] args)
         {
-            Console.WriteLine("InstaShit Beta");
+            Console.WriteLine("InstaShit v1.0");
             Console.WriteLine("Created by Konrad Krawiec\n");
             settings = GetSettings();
             rndGenerator = new Random();
@@ -276,7 +276,7 @@ namespace Instashit
                 bool correctAnswer = true;
                 if (!sessionCount.ContainsKey(wordID))
                     sessionCount.Add(wordID, 0);
-                if (sessionCount[wordID] != -1 && sessionCount[wordID] < settings.IntelligentMistakesData.Count
+                if (sessionCount[wordID] != -1 && wordsCount[wordID] != -1 && sessionCount[wordID] < settings.IntelligentMistakesData.Count
                     && wordsCount[wordID] < settings.IntelligentMistakesData[sessionCount[wordID]].Count
                     && (settings.IntelligentMistakesData[sessionCount[wordID]][wordsCount[wordID]].MaxNumberOfMistakes == -1
                     || mistakesCount[sessionCount[wordID]][wordsCount[wordID]] < settings.IntelligentMistakesData[sessionCount[wordID]][wordsCount[wordID]].MaxNumberOfMistakes))
@@ -285,10 +285,14 @@ namespace Instashit
                     if (rndPercentage <= settings.IntelligentMistakesData[sessionCount[wordID]][wordsCount[wordID]].RiskPercentage)
                     {
                         correctAnswer = false;
+                        mistakesCount[sessionCount[wordID]][wordsCount[wordID]]++;
+                        wordsCount[wordID]++;
                     }
-                    else if (wordsCount[wordID] == 0)
+                    else
                     {
-                        sessionCount[wordID] = -1;
+                        if (wordsCount[wordID] == 0)
+                            sessionCount[wordID] = -1;
+                        wordsCount[wordID] = -1;
                     }
                 }
                 var pairsList = new List<KeyValuePair<string, string>>()
@@ -327,9 +331,6 @@ namespace Instashit
                     Console.WriteLine("Oops, something went wrong :( \n Please report this error to the bot's author.");
                     break;
                 }
-                if (!correctAnswer)
-                    mistakesCount[sessionCount[wordID]][wordsCount[wordID]]++;
-                wordsCount[wordID]++;
             }
             Console.WriteLine("Saving session data...");
             foreach (var key in sessionCount.Keys.ToList())
