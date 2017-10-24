@@ -39,10 +39,10 @@ namespace Instashit
         /// <returns>A word with a mistake.</returns>
         static async Task<string> GetWrongWord(string word)
         {
-            //Trzy możliwe błędy:
-            //0 - brak odpowiedzi
-            //1 - odpowiedź z literówką (TODO)
-            //2 - synonim
+            //Three possible mistakes:
+            //0 - no answer
+            //1 - answer with a typo (TODO)
+            //2 - synonym
             int mistakeType = rndGenerator.Next(0, 3);
             if (mistakeType == 0)
                 return "";
@@ -53,7 +53,7 @@ namespace Instashit
                     if (word[i] == word[i + 1])
                         return word.Remove(i, 1);
                 }
-                //Coś kiepsko działają te literówki, więc na razie są wyłączone
+                //This doesn't seem to work well, so it's disabled for now
                 /*
                 string stringToReplace = "";
                 string newString;
@@ -158,17 +158,16 @@ namespace Instashit
         /// <returns>The integer.</returns>
         static int GetIntFromUser(string valueName, int minValue, int maxValue)
         {
-            int value = -2;
-            do
+            while (true)
             {
                 Console.Write($"{valueName}: ");
-                if (!Int32.TryParse(Console.ReadLine(), out value) && value >= minValue && value <= maxValue)
+                if (!Int32.TryParse(Console.ReadLine(), out int value) || value < minValue || value > maxValue)
                 {
                     Console.WriteLine("Wrong input, try again.");
-                    value = -2;
+                    continue;
                 }
-            } while (value == -2);
-            return value;
+                return value;
+            }
         }
         /// <summary>
         /// Gets the string from user's input.
@@ -192,7 +191,7 @@ namespace Instashit
         }
         static async Task Main(string[] args)
         {
-            Console.WriteLine("InstaShit v1.0");
+            Console.WriteLine("InstaShit - Bot for Instaling which automatically solves daily tasks");
             Console.WriteLine("Created by Konrad Krawiec\n");
             settings = GetSettings();
             rndGenerator = new Random();
