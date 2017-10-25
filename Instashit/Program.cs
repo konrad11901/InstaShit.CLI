@@ -118,10 +118,10 @@ namespace Instashit
             {
                 Login = GetStringFromUser("Login"),
                 Password = GetStringFromUser("Password"),
-                MinimumSleepTime = GetIntFromUser("Minimum sleep time (in miliseconds)", 0, Int32.MaxValue)
+                MinimumSleepTime = GetIntFromUser("Minimum sleep time (in miliseconds)", 0, Int32.MaxValue),
+                IntelligentMistakesData = new List<List<IntelligentMistakesDataEntry>>()
             };
             settings.MaximumSleepTime = GetIntFromUser("Maximum sleep time (in miliseconds)", settings.MinimumSleepTime, Int32.MaxValue);
-            settings.IntelligentMistakesData = new List<List<IntelligentMistakesDataEntry>>();
             Console.Write("Specify IntelligentMistakesData for session number 1 (y/n)? ");
             if (CanContinue())
             {
@@ -189,6 +189,17 @@ namespace Instashit
             if (input == "y") return true;
             return false;
         }
+        /// <summary>
+        /// Sends the POST request to the specified URL and returns the result of this request as a string value.
+        /// </summary>
+        /// <param name="requestUri">The request URL></param>
+        /// <param name="content">The content of this POST Request</param>
+        /// <returns>Result of POST request.</returns>
+        static async Task<string> GetPostResultAsync(string requestUri, HttpContent content)
+        {
+            var result = await client.PostAsync(requestUri, content);
+            return await result.Content.ReadAsStringAsync();
+        }
         static async Task Main(string[] args)
         {
             Console.WriteLine("InstaShit - Bot for Instaling which automatically solves daily tasks");
@@ -212,9 +223,8 @@ namespace Instashit
                 new KeyValuePair<string, string>("log_email", settings.Login),
                 new KeyValuePair<string, string>("log_password", settings.Password)
             });
-            var result = await client.PostAsync("/teacher.php?page=teacherActions", content);
+            string resultString = await GetPostResultAsync("/teacher.php?page=teacherActions", content);
             Debug("Successfully posted to /teacher.php?page=teacherActions");
-            var resultString = await result.Content.ReadAsStringAsync();
             Debug($"Result from /learning/student.php: {resultString}");
             if (resultString.Contains("<title>insta.ling</title>"))
                 Console.WriteLine("Successfully logged in!");
@@ -232,9 +242,9 @@ namespace Instashit
                 new KeyValuePair<string, string>("start", ""),
                 new KeyValuePair<string, string>("end", "")
             });
-            result = await client.PostAsync("/ling2/server/actions/init_session.php", content);
-            var JSONResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(await result.Content.ReadAsStringAsync());
-            Debug("JSONResponse from POST /ling2/server/actions/init_session.php: " + await result.Content.ReadAsStringAsync());
+            resultString = await GetPostResultAsync("/ling2/server/actions/init_session.php", content);
+            var JSONResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString);
+            Debug("JSONResponse from POST /ling2/server/actions/init_session.php: " + resultString);
             if ((bool)JSONResponse["is_new"])
                 Console.WriteLine("Starting new session");
             else
@@ -263,9 +273,9 @@ namespace Instashit
                     new KeyValuePair<string, string>("child_id", childID),
                     new KeyValuePair<string, string>("date", GetJSTime().ToString())
                 });
-                result = await client.PostAsync("/ling2/server/actions/generate_next_word.php", content);
-                Debug(await result.Content.ReadAsStringAsync());
-                JSONResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(await result.Content.ReadAsStringAsync());
+                resultString = await GetPostResultAsync("/ling2/server/actions/generate_next_word.php", content);
+                Debug("Result from generate_next_word.php: " + resultString);
+                JSONResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString);
                 if (JSONResponse.ContainsKey("summary"))
                     break;
                 string wordID = JSONResponse["id"].ToString();
@@ -316,8 +326,8 @@ namespace Instashit
                 }
                 content = new FormUrlEncodedContent(pairsList);
                 Console.WriteLine($"question about word \"{word}\" with id {wordID}");
-                result = await client.PostAsync("/ling2/server/actions/save_answer.php", content);
-                JSONResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(await result.Content.ReadAsStringAsync());
+                resultString = await GetPostResultAsync("/ling2/server/actions/save_answer.php", content);
+                JSONResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString);
                 if ((JSONResponse["grade"].ToString() == "1" && correctAnswer) || (JSONResponse["grade"].ToString() == "0" && !correctAnswer))
                     Console.WriteLine("Success!");
                 else if (JSONResponse["grade"].ToString() == "2" && !correctAnswer)
