@@ -108,12 +108,18 @@ namespace Instashit
         /// <summary>
         /// Gets the InstaShit's settings from settings file or user's input.
         /// </summary>
+        /// <param name="ignoreSettings">Defines if the settings file should be ignored (false by default).</param>
         /// <returns>The object of Settings class with loaded values.</returns>
-        static Settings GetSettings()
+        static Settings GetSettings(bool ignoreSettings = false)
         {
-            if (File.Exists(Path.Combine(assemblyLocation, "settings.json")))
-                return JsonConvert.DeserializeObject<Settings>(File.ReadAllText(Path.Combine(assemblyLocation, "settings.json")));
-            Console.WriteLine("Can't find settings file, please enter the following values:");
+            if (!ignoreSettings)
+            {
+                if (File.Exists(Path.Combine(assemblyLocation, "settings.json")))
+                    return JsonConvert.DeserializeObject<Settings>(File.ReadAllText(Path.Combine(assemblyLocation, "settings.json")));
+                Console.WriteLine("Can't find settings file, please enter the following values:");
+            }
+            else
+                Console.WriteLine("Please enter the following values:");
             Settings settings = new Settings
             {
                 Login = GetStringFromUser("Login"),
@@ -144,9 +150,12 @@ namespace Instashit
                 } while (CanContinue());
 
             }
-            Console.Write("Save these settings (y/n)? ");
-            if (CanContinue())
-                File.WriteAllText(Path.Combine(assemblyLocation, "settings.json"), JsonConvert.SerializeObject(settings, Formatting.Indented));
+            if (!ignoreSettings)
+            {
+                Console.Write("Save these settings (y/n)? ");
+                if (CanContinue())
+                    File.WriteAllText(Path.Combine(assemblyLocation, "settings.json"), JsonConvert.SerializeObject(settings, Formatting.Indented));
+            }
             return settings;
         }
         /// <summary>
@@ -204,7 +213,10 @@ namespace Instashit
         {
             Console.WriteLine("InstaShit - Bot for Instaling which automatically solves daily tasks");
             Console.WriteLine("Created by Konrad Krawiec\n");
-            settings = GetSettings();
+            if (args.Length == 1 && args[0].ToLower() == "-ignoresettings")
+                settings = GetSettings(true);
+            else
+                settings = GetSettings();
             rndGenerator = new Random();
             handler = new HttpClientHandler();
             client = new HttpClient(handler)
@@ -257,6 +269,11 @@ namespace Instashit
                 sessionCount = JsonConvert.DeserializeObject<Dictionary<string, int>>(File.ReadAllText(Path.Combine(assemblyLocation, "wordsHistory.json")));
             else
                 sessionCount = new Dictionary<string, int>();
+            List<String> words;
+            if (File.Exists(Path.Combine(assemblyLocation, "wordsDictionary.json")))
+                words = JsonConvert.DeserializeObject<List<String>>(File.ReadAllText(Path.Combine(assemblyLocation, "wordsDictionary.json")));
+            else
+                words = new List<string>();
             var wordsCount = new Dictionary<string, int>();
             var mistakesCount = new List<List<int>>();
             for (int i = 0; i < settings.IntelligentMistakesData.Count; i++)
@@ -282,6 +299,8 @@ namespace Instashit
                 string word = JSONResponse["word"].ToString();
                 if (!wordsCount.ContainsKey(wordID))
                     wordsCount.Add(wordID, 0);
+                if (!words.Contains(word))
+                    words.Add(word);
                 bool correctAnswer = true;
                 if (!sessionCount.ContainsKey(wordID))
                     sessionCount.Add(wordID, 0);
@@ -346,6 +365,7 @@ namespace Instashit
                 if (sessionCount[key] != -1)
                     sessionCount[key]++;
             File.WriteAllText(Path.Combine(assemblyLocation, "wordsHistory.json"), JsonConvert.SerializeObject(sessionCount, Formatting.Indented));
+            File.WriteAllText(Path.Combine(assemblyLocation, "wordsDictionary.json"), JsonConvert.SerializeObject(words, Formatting.Indented));
             Console.WriteLine("FINISHED");
             Console.ReadKey();
         }
