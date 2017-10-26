@@ -48,6 +48,7 @@ namespace Instashit
                 return "";
             else if (mistakeType == 1)
             {
+                if (!settings.AllowTypo) return "";
                 for (int i = 0; i < word.Length - 1; i++)
                 {
                     if (word[i] == word[i + 1])
@@ -81,6 +82,7 @@ namespace Instashit
             }
             else
             {
+                if (!settings.AllowSynonym) return "";
                 var result = await synonymsAPIClient.GetAsync("/words?ml=" + word);
                 var synonyms = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(await result.Content.ReadAsStringAsync());
                 if (synonyms.Count == 0)
@@ -148,7 +150,12 @@ namespace Instashit
                     } while (CanContinue());
                     Console.Write($"Specify IntelligentMistakesData for session number {i + 2} (y/n)? ");
                 } while (CanContinue());
-
+                Console.Write("Allow typo in answer (y/n)? ");
+                if (!CanContinue())
+                    settings.AllowTypo = false;
+                Console.Write("Allow synonyms (y/n)? ");
+                if (!CanContinue())
+                    settings.AllowSynonym = false;
             }
             if (!ignoreSettings)
             {
@@ -208,6 +215,30 @@ namespace Instashit
         {
             var result = await client.PostAsync(requestUri, content);
             return await result.Content.ReadAsStringAsync();
+        }
+        /// <summary>
+        /// Prints results of everyday's training.
+        /// </summary>
+        /// <param name="childID">ID of the child.</param>
+        static async Task PrintResultsAsync(string childID)
+        {
+            var content = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("child_id", childID),
+                new KeyValuePair<string, string>("date", GetJSTime().ToString())
+            });
+            var result = await client.PostAsync("/ling2/server/actions/grade_report.php", content);
+            var JSONResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(await result.Content.ReadAsStringAsync());
+            Console.WriteLine();
+            if (JSONResponse.ContainsKey("prev_mark"))
+                Console.WriteLine("Mark from previous week: " + JSONResponse["prev_mark"].ToString());
+            Console.WriteLine("Days of work in this week: " + JSONResponse["work_week_days"].ToString());
+            Console.WriteLine("For extracurricular words: +" + JSONResponse["parent_words_extra"].ToString());
+            Console.WriteLine("Teacher's words: " + JSONResponse["teacher_words"].ToString());
+            Console.WriteLine("Extracurricular words in current edition: " + JSONResponse["parent_words"].ToString());
+            Console.WriteLine("Mark as of today at least: " + JSONResponse["current_mark"].ToString());
+            Console.WriteLine("Days until the end of this week: " + JSONResponse["week_remaining_days"].ToString());
+            Console.WriteLine();
         }
         static async Task Main(string[] args)
         {
@@ -269,11 +300,11 @@ namespace Instashit
                 sessionCount = JsonConvert.DeserializeObject<Dictionary<string, int>>(File.ReadAllText(Path.Combine(assemblyLocation, "wordsHistory.json")));
             else
                 sessionCount = new Dictionary<string, int>();
-            List<String> words;
+            Dictionary<string, string> words;
             if (File.Exists(Path.Combine(assemblyLocation, "wordsDictionary.json")))
-                words = JsonConvert.DeserializeObject<List<String>>(File.ReadAllText(Path.Combine(assemblyLocation, "wordsDictionary.json")));
+                words = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(Path.Combine(assemblyLocation, "wordsDictionary.json")));
             else
-                words = new List<string>();
+                words = new Dictionary<string, string>();
             var wordsCount = new Dictionary<string, int>();
             var mistakesCount = new List<List<int>>();
             for (int i = 0; i < settings.IntelligentMistakesData.Count; i++)
@@ -294,13 +325,17 @@ namespace Instashit
                 Debug("Result from generate_next_word.php: " + resultString);
                 JSONResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString);
                 if (JSONResponse.ContainsKey("summary"))
+                {
+                    Console.WriteLine("Session successfully finished.");
+                    await PrintResultsAsync(childID);
                     break;
+                }
                 string wordID = JSONResponse["id"].ToString();
                 string word = JSONResponse["word"].ToString();
                 if (!wordsCount.ContainsKey(wordID))
                     wordsCount.Add(wordID, 0);
-                if (!words.Contains(word))
-                    words.Add(word);
+                if (!words.ContainsKey(word))
+                    words.Add(word, JSONResponse["translations"].ToString());
                 bool correctAnswer = true;
                 if (!sessionCount.ContainsKey(wordID))
                     sessionCount.Add(wordID, 0);
@@ -367,6 +402,7 @@ namespace Instashit
             File.WriteAllText(Path.Combine(assemblyLocation, "wordsHistory.json"), JsonConvert.SerializeObject(sessionCount, Formatting.Indented));
             File.WriteAllText(Path.Combine(assemblyLocation, "wordsDictionary.json"), JsonConvert.SerializeObject(words, Formatting.Indented));
             Console.WriteLine("FINISHED");
+            Console.WriteLine("Press any key to close InstaShit...");
             Console.ReadKey();
         }
     }
