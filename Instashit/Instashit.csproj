@@ -25,4 +25,8 @@
     <Folder Include="Properties\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\InstaShitCore\InstaShitCore\InstaShitCore.csproj" />
+  </ItemGroup>
+
 </Project>
