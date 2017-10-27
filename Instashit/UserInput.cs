@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Instashit
+namespace InstaShit
 {
     public static class UserInput
     {

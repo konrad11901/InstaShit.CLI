@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using InstaShitCore;
 using System.IO;
 using Newtonsoft.Json;
-using static Instashit.UserInput;
+using static InstaShit.UserInput;
 using System.Reflection;
 
-namespace Instashit
+namespace InstaShit
 {
     public class InstaShit : InstaShitCore.InstaShitCore
     {

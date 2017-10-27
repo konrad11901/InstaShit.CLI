@@ -4,7 +4,7 @@ using System;
 using System.Threading.Tasks;
 using InstaShitCore;
 
-namespace Instashit
+namespace InstaShit
 {
     class Program
     {

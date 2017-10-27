@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InstaShit", "Instashit\Instashit.csproj", "{DA1A0604-337B-4684-B47F-3568D1DECA80}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InstaShit", "InstaShit\InstaShit.csproj", "{DA1A0604-337B-4684-B47F-3568D1DECA80}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InstaShitCore", "InstaShitCore\InstaShitCore.csproj", "{A2577031-C259-4EA4-AACD-4950B4002871}"
 EndProject
