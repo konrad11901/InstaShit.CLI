@@ -1,2 +1,2 @@
 # InstaShit
-Bot for Instaling which automatically solves daily tasks
+Bot for [Instaling](https://instaling.pl) which automatically solves daily tasks.
