@@ -14,7 +14,23 @@ namespace InstaShit
         {
 
         }
-        protected override Settings GetSettingsFromUser(bool ignoreSettings)
+        /// <summary>
+        /// Gets the InstaShit's settings from settings file or user's input.
+        /// </summary>
+        /// <param name="ignoreSettings">Specifies if the settings file should be ignored.</param>
+        /// <returns>The object of Settings class with loaded values.</returns>
+        protected override Settings GetSettings(bool ignoreSettings)
+        {
+            if (ignoreSettings || !File.Exists(GetFileLocation("settings.json")))
+                return GetSettingsFromUser(ignoreSettings);
+            return base.GetSettings(ignoreSettings);
+        }
+        /// <summary>
+        /// Gets the InstaShit's settings from user's input.
+        /// </summary>
+        /// <param name="ignoreSettings">Specifies if the settings file should be ignored.</param>
+        /// <returns>The object of Settings class with loaded values.</returns>
+        private Settings GetSettingsFromUser(bool ignoreSettings)
         {
             if (ignoreSettings)
                 Console.WriteLine("Please enter the folllowing values:");
@@ -67,6 +83,18 @@ namespace InstaShit
         {
             string assemblyLocation = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             return Path.Combine(assemblyLocation, fileName);
+        }
+        /// <summary>
+        /// Writes the specified string value to the standard output stream if debug mode is turned on.
+        /// </summary>
+        /// <param name="text">The value to write.</param>
+        protected override void Debug(string text)
+        { 
+            if(DebugMode)
+            {
+                Console.WriteLine(text);
+            }
+            base.Debug(text);
         }
     }
 }

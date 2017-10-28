@@ -47,7 +47,7 @@ namespace InstaShit
                     Console.Write($"Attempting to incorrectly answer (\"{answer.AnswerWord}\") ");
                 }
                 Console.WriteLine($"question about word \"{answer.Word}\" with id {answer.WordID}");
-                if(await instaShit.TryAnswerQuestion(answer.WordID, answer.AnswerWord, correctAnswer))
+                if(await instaShit.TryAnswerQuestion(answer))
                     Console.WriteLine("Success!");
                 else
                 {

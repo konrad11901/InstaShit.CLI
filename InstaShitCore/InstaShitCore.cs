@@ -23,11 +23,7 @@ namespace InstaShitCore
         private Dictionary<string, string> words;
         private Dictionary<string, int> wordsCount;
         private List<List<int>> mistakesCount;
-        public InstaShitCore() : this(false)
-        {
-            
-        }
-        public InstaShitCore(bool ignoreSettings)
+        public InstaShitCore(bool ignoreSettings = false)
         {
             handler = new HttpClientHandler();
             client = new HttpClient(handler)
@@ -65,14 +61,15 @@ namespace InstaShitCore
         /// <returns>The location of specified file.</returns>
         protected abstract string GetFileLocation(string fileName);
         /// <summary>
-        /// Writes the specified string value to the standard output stream if debug mode is turned on.
+        /// Writes the specified string value to the trace listeners if debug mode is turned on.
         /// </summary>
         /// <param name="text">The value to write.</param>
         protected virtual void Debug(string text)
         {
-            System.Diagnostics.Debug.WriteLine(text);
+            if(DebugMode)
+                System.Diagnostics.Debug.WriteLine(text);
         }
-
+        protected bool DebugMode => settings.Debug;
         /// <summary>
         /// Creates a new, not correct word based on the specified string value.
         /// </summary>
@@ -149,21 +146,16 @@ namespace InstaShitCore
             return (Int64)timeSpan.TotalMilliseconds;
         }
         /// <summary>
-        /// Gets the InstaShit's settings from settings file or user's input.
+        /// Gets the InstaShit's settings from settings file.
         /// </summary>
-        /// <param name="ignoreSettings">Defines if the settings file should be ignored (false by default).</param>
         /// <returns>The object of Settings class with loaded values.</returns>
-        private Settings GetSettings(bool ignoreSettings)
+        protected virtual Settings GetSettings(bool ignoreSettings)
         {
-            if (!ignoreSettings)
-            {
-                if (File.Exists(GetFileLocation("settings.json")))
-                    return JsonConvert.DeserializeObject<Settings>(File.ReadAllText(GetFileLocation("settings.json")));
-            }
-            return GetSettingsFromUser(ignoreSettings);
+            if (!ignoreSettings && File.Exists(GetFileLocation("settings.json")))
+                return JsonConvert.DeserializeObject<Settings>(File.ReadAllText(GetFileLocation("settings.json")));
+            return null;
 
         }
-        protected abstract Settings GetSettingsFromUser(bool ignoreSettings);
         /// <summary>
         /// Sends the POST request to the specified URL and returns the result of this request as a string value.
         /// </summary>
@@ -263,23 +255,21 @@ namespace InstaShitCore
         /// <summary>
         /// Attempts to answer the question.
         /// </summary>
-        /// <param name="wordID">ID of the word to answer.</param>
-        /// <param name="answer">Answer to the question.</param>
-        /// <param name="correctAnswer">Defines if the answer should be correct or not.</param>
+        /// <param name="answer">Information about the answer.</param>
         /// <returns>True if the attempt to answer the question was successful; otherwise, false.</returns>
-        public async Task<bool> TryAnswerQuestion(string wordID, string answer, bool correctAnswer)
+        public async Task<bool> TryAnswerQuestion(Answer answer)
         {
             var content = new FormUrlEncodedContent(new[]
             {
                 new KeyValuePair<string, string>("child_id", childID),
-                new KeyValuePair<string, string>("word_id", wordID),
+                new KeyValuePair<string, string>("word_id", answer.WordID),
                 new KeyValuePair<string, string>("version", "43yo4ihw"),
-                new KeyValuePair<string, string>("answer", answer)
+                new KeyValuePair<string, string>("answer", answer.AnswerWord)
             });
             var resultString = await GetPostResultAsync("/ling2/server/actions/save_answer.php", content);
             var JSONResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString);
-            if ((JSONResponse["grade"].ToString() == "1" && correctAnswer)
-                || ((JSONResponse["grade"].ToString() == "0" || JSONResponse["grade"].ToString() == "2") && !correctAnswer))
+            if ((JSONResponse["grade"].ToString() == "1" && answer.Word == answer.AnswerWord)
+                || ((JSONResponse["grade"].ToString() == "0" || JSONResponse["grade"].ToString() == "2") && answer.Word != answer.AnswerWord))
                 return true;
             else
                 return false;
