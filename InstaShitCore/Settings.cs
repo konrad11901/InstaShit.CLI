@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿// InstaShit - Bot for Instaling which automatically solves daily tasks
+// Created by Konrad Krawiec
+using System.Collections.Generic;
 
 namespace InstaShitCore
 {

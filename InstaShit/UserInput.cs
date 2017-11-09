@@ -1,4 +1,6 @@
-﻿using System;
+﻿// InstaShit - Bot for Instaling which automatically solves daily tasks
+// Created by Konrad Krawiec
+using System;
 
 namespace InstaShit
 {

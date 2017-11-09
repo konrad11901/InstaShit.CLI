@@ -217,7 +217,7 @@ namespace InstaShitCore
         /// <summary>
         /// Checks if the currrent session is new.
         /// </summary>
-        /// <returns>True if the currentt session is new; otherwise, false.</returns>
+        /// <returns>True if the current session is new; otherwise, false.</returns>
         public async Task<bool> IsNewSession()
         {
             if (childID == null)

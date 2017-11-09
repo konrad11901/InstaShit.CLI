@@ -12,12 +12,23 @@ namespace InstaShit
         {
             Console.WriteLine("InstaShit - Bot for Instaling which automatically solves daily tasks");
             Console.WriteLine("Created by Konrad Krawiec\n");
-            InstaShit instaShit;
-            if (args.Length == 1 && args[0].ToLower() == "-ignoresettings")
-                instaShit = new InstaShit(true);
+            bool ignoreSettings = false, noUserInteraction = false;
+            foreach(string arg in args)
+            {
+                switch(arg.ToLower())
+                {
+                    case "-ignoresettings":
+                        ignoreSettings = true;
+                        break;
+                    case "-nouserinteraction":
+                        noUserInteraction = true;
+                        break;
+                }
+            }
+            InstaShit instaShit = new InstaShit(ignoreSettings);
+            if (await instaShit.TryLoginAsync())
+                Console.WriteLine("Successfully logged in!");
             else
-                instaShit = new InstaShit();
-            if (!await instaShit.TryLoginAsync())
             {
                 Console.WriteLine("Login failed!");
                 return;
@@ -26,8 +37,12 @@ namespace InstaShit
                 Console.WriteLine("Starting new session");
             else
             {
-                Console.Write("It looks like session was already started. Inteligent mistake making may be inaccurate.\nContinue (y/n)? ");
-                if (!UserInput.CanContinue()) return;
+                Console.WriteLine("It looks like session was already started. Inteligent mistake making may be inaccurate.");
+                if(!noUserInteraction)
+                {
+                    Console.Write("Continue (y/n)? ");
+                    if (!UserInput.CanContinue()) return;
+                }
             }
             while(true)
             {
@@ -40,13 +55,13 @@ namespace InstaShit
                 bool correctAnswer = answer.Word == answer.AnswerWord ? true : false;
                 if(correctAnswer)
                 {
-                    Console.Write("Attempting to answer ");
+                    Console.Write("Attempting to answer");
                 }
                 else
                 {
-                    Console.Write($"Attempting to incorrectly answer (\"{answer.AnswerWord}\") ");
+                    Console.Write($"Attempting to incorrectly answer (\"{answer.AnswerWord}\")");
                 }
-                Console.WriteLine($"question about word \"{answer.Word}\" with id {answer.WordID}");
+                Console.WriteLine($" question about word \"{answer.Word}\" with id {answer.WordID}");
                 if(await instaShit.TryAnswerQuestion(answer))
                     Console.WriteLine("Success!");
                 else
