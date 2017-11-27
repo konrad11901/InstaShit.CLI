@@ -18,12 +18,9 @@ namespace InstaShit
             while (true)
             {
                 Console.Write($"{valueName}: ");
-                if (!Int32.TryParse(Console.ReadLine(), out int value) || value < minValue || value > maxValue)
-                {
-                    Console.WriteLine("Wrong input, try again.");
-                    continue;
-                }
-                return value;
+                if (int.TryParse(Console.ReadLine(), out var value) && value >= minValue && value <= maxValue)
+                    return value;
+                Console.WriteLine("Wrong input, try again.");
             }
         }
         /// <summary>
@@ -42,9 +39,8 @@ namespace InstaShit
         /// <returns>The boolean which specifies if the program can continue.</returns>
         public static bool CanContinue()
         {
-            string input = Console.ReadLine();
-            if (input == "y") return true;
-            return false;
+            var input = Console.ReadLine();
+            return input == "y";
         }
     }
 }

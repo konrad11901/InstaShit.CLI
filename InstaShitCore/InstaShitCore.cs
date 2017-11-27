@@ -6,51 +6,50 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Linq;
 
 namespace InstaShitCore
 {
     public abstract class InstaShitCore
     {
-        private HttpClientHandler handler;
-        private HttpClient client;
-        private HttpClient synonymsAPIClient;
-        private Random rndGenerator;
-        private Settings settings;
-        private string childID;
-        private Dictionary<string, int> sessionCount;
-        private Dictionary<string, string> words;
-        private Dictionary<string, int> wordsCount;
-        private List<List<int>> mistakesCount;
-        public InstaShitCore(bool ignoreSettings = false)
+        private readonly HttpClient _client;
+        private readonly HttpClient _synonymsApiClient;
+        private readonly Random _rndGenerator;
+        private readonly Settings _settings;
+        private string _childId;
+        private readonly Dictionary<string, int> _sessionCount;
+        private readonly Dictionary<string, string> _words;
+        private readonly Dictionary<string, int> _wordsCount;
+        private readonly List<List<int>> _mistakesCount;
+
+        protected InstaShitCore(bool ignoreSettings = false)
         {
-            handler = new HttpClientHandler();
-            client = new HttpClient(handler)
+            var handler = new HttpClientHandler();
+            _client = new HttpClient(handler)
             {
                 BaseAddress = new Uri("https://instaling.pl")
             };
-            synonymsAPIClient = new HttpClient()
+            _synonymsApiClient = new HttpClient()
             {
                 BaseAddress = new Uri("https://api.datamuse.com")
             };
-            rndGenerator = new Random();
-            this.settings = GetSettings(ignoreSettings);
+            _rndGenerator = new Random();
+            _settings = GetSettings(ignoreSettings);
             if (File.Exists(GetFileLocation("wordsHistory.json")))
-                sessionCount = JsonConvert.DeserializeObject<Dictionary<string, int>>(File.ReadAllText(GetFileLocation("wordsHistory.json")));
+                _sessionCount = JsonConvert.DeserializeObject<Dictionary<string, int>>(File.ReadAllText(GetFileLocation("wordsHistory.json")));
             else
-                sessionCount = new Dictionary<string, int>();
+                _sessionCount = new Dictionary<string, int>();
             if (File.Exists(GetFileLocation("wordsDictionary.json")))
-                words = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(GetFileLocation("wordsDictionary.json")));
+                _words = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(GetFileLocation("wordsDictionary.json")));
             else
-                words = new Dictionary<string, string>();
-            wordsCount = new Dictionary<string, int>();
-            mistakesCount = new List<List<int>>();
-            for (int i = 0; i < settings.IntelligentMistakesData.Count; i++)
+                _words = new Dictionary<string, string>();
+            _wordsCount = new Dictionary<string, int>();
+            _mistakesCount = new List<List<int>>();
+            for (var i = 0; i < _settings.IntelligentMistakesData.Count; i++)
             {
-                mistakesCount.Add(new List<int>());
-                for (int j = 0; j < settings.IntelligentMistakesData[i].Count; j++)
-                    mistakesCount[i].Add(0);
+                _mistakesCount.Add(new List<int>());
+                for (var j = 0; j < _settings.IntelligentMistakesData[i].Count; j++)
+                    _mistakesCount[i].Add(0);
 
             }
         }
@@ -69,7 +68,7 @@ namespace InstaShitCore
             if(DebugMode)
                 System.Diagnostics.Debug.WriteLine(text);
         }
-        protected bool DebugMode => settings.Debug;
+        protected bool DebugMode => _settings.Debug;
         /// <summary>
         /// Creates a new, not correct word based on the specified string value.
         /// </summary>
@@ -81,13 +80,13 @@ namespace InstaShitCore
             //0 - no answer
             //1 - answer with a typo (TODO)
             //2 - synonym
-            int mistakeType = rndGenerator.Next(0, 3);
+            var mistakeType = _rndGenerator.Next(0, 3);
             if (mistakeType == 0)
                 return "";
             else if (mistakeType == 1)
             {
-                if (!settings.AllowTypo) return "";
-                for (int i = 0; i < word.Length - 1; i++)
+                if (!_settings.AllowTypo) return "";
+                for (var i = 0; i < word.Length - 1; i++)
                 {
                     if (word[i] == word[i + 1])
                         return word.Remove(i, 1);
@@ -120,30 +119,27 @@ namespace InstaShitCore
             }
             else
             {
-                if (!settings.AllowSynonym) return "";
-                var result = await synonymsAPIClient.GetAsync("/words?ml=" + word);
+                if (!_settings.AllowSynonym) return "";
+                var result = await _synonymsApiClient.GetAsync("/words?ml=" + word);
                 var synonyms = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(await result.Content.ReadAsStringAsync());
                 if (synonyms.Count == 0)
                     return "";
                 if (synonyms.Count == 1)
                     return synonyms[0]["word"].ToString();
                 int maxRnd;
-                if (synonyms.Count == 2)
-                    maxRnd = 2;
-                else
-                    maxRnd = 3;
-                return synonyms[rndGenerator.Next(0, maxRnd)]["word"].ToString();
+                maxRnd = synonyms.Count == 2 ? 2 : 3;
+                return synonyms[_rndGenerator.Next(0, maxRnd)]["word"].ToString();
             }
         }
         /// <summary>
         /// Gets the number of miliseconds since 1970/01/01 (equivalent of JavaScript GetTime() function).
         /// </summary>
         /// <returns>The number of miliseconds since 1970/01/01.</returns>
-        static Int64 GetJSTime()
+        public static int GetJsTime()
         {
-            DateTime dateTime = new DateTime(1970, 1, 1);
-            TimeSpan timeSpan = DateTime.Now.ToUniversalTime() - dateTime;
-            return (Int64)timeSpan.TotalMilliseconds;
+            var dateTime = new DateTime(1970, 1, 1);
+            var timeSpan = DateTime.Now.ToUniversalTime() - dateTime;
+            return (int) timeSpan.TotalMilliseconds;
         }
         /// <summary>
         /// Gets the InstaShit's settings from settings file.
@@ -164,32 +160,31 @@ namespace InstaShitCore
         /// <returns>Result of POST request.</returns>
         private async Task<string> GetPostResultAsync(string requestUri, HttpContent content)
         {
-            var result = await client.PostAsync(requestUri, content);
+            var result = await _client.PostAsync(requestUri, content);
             return await result.Content.ReadAsStringAsync();
         }
         /// <summary>
         /// Gets results of today's training.
         /// </summary>
-        /// <param name="childID">ID of the child.</param>
         /// <returns>Results of today's training.</returns>
         public async Task<ChildResults> GetResultsAsync()
         {
             var content = new FormUrlEncodedContent(new[]
             {
-                new KeyValuePair<string, string>("child_id", childID),
-                new KeyValuePair<string, string>("date", GetJSTime().ToString())
+                new KeyValuePair<string, string>("child_id", _childId),
+                new KeyValuePair<string, string>("date", GetJsTime().ToString())
             });
-            var result = await client.PostAsync("/ling2/server/actions/grade_report.php", content);
-            var JSONResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(await result.Content.ReadAsStringAsync());
-            ChildResults childResults = new ChildResults();
-            if (JSONResponse.ContainsKey("prev_mark"))
-                childResults.PreviousMark = JSONResponse["prev_mark"].ToString();
-            childResults.DaysOfWork = JSONResponse["work_week_days"].ToString();
-            childResults.ExtraParentWords = JSONResponse["parent_words_extra"].ToString();
-            childResults.TeacherWords = JSONResponse["teacher_words"].ToString();
-            childResults.ParentWords = JSONResponse["parent_words"].ToString();
-            childResults.CurrrentMark = JSONResponse["current_mark"].ToString();
-            childResults.WeekRemainingDays = JSONResponse["week_remaining_days"].ToString();
+            var result = await _client.PostAsync("/ling2/server/actions/grade_report.php", content);
+            var jsonResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(await result.Content.ReadAsStringAsync());
+            var childResults = new ChildResults();
+            if (jsonResponse.ContainsKey("prev_mark"))
+                childResults.PreviousMark = jsonResponse["prev_mark"].ToString();
+            childResults.DaysOfWork = jsonResponse["work_week_days"].ToString();
+            childResults.ExtraParentWords = jsonResponse["parent_words_extra"].ToString();
+            childResults.TeacherWords = jsonResponse["teacher_words"].ToString();
+            childResults.ParentWords = jsonResponse["parent_words"].ToString();
+            childResults.CurrrentMark = jsonResponse["current_mark"].ToString();
+            childResults.WeekRemainingDays = jsonResponse["week_remaining_days"].ToString();
             return childResults;
         }
         /// <summary>
@@ -202,16 +197,16 @@ namespace InstaShitCore
             {
                 new KeyValuePair<string, string>("action", "login"),
                 new KeyValuePair<string, string>("from", ""),
-                new KeyValuePair<string, string>("log_email", settings.Login),
-                new KeyValuePair<string, string>("log_password", settings.Password)
+                new KeyValuePair<string, string>("log_email", _settings.Login),
+                new KeyValuePair<string, string>("log_password", _settings.Password)
             });
-            string resultString = await GetPostResultAsync("/teacher.php?page=teacherActions", content);
+            var resultString = await GetPostResultAsync("/teacher.php?page=teacherActions", content);
             Debug("Successfully posted to /teacher.php?page=teacherActions");
             Debug($"Result from /learning/student.php: {resultString}");
             if (!resultString.Contains("<title>insta.ling</title>"))
                 return false;
-            childID = resultString.Substring(resultString.IndexOf("child_id=", StringComparison.Ordinal) + 9, 6);
-            Debug($"childID = {childID}");
+            _childId = resultString.Substring(resultString.IndexOf("child_id=", StringComparison.Ordinal) + 9, 6);
+            Debug($"childID = {_childId}");
             return true;
         }
         /// <summary>
@@ -220,21 +215,19 @@ namespace InstaShitCore
         /// <returns>True if the current session is new; otherwise, false.</returns>
         public async Task<bool> IsNewSession()
         {
-            if (childID == null)
+            if (_childId == null)
                 throw new InvalidOperationException("User is not logged in");
             var content = new FormUrlEncodedContent(new[]
             {
-                new KeyValuePair<string, string>("child_id", childID),
+                new KeyValuePair<string, string>("child_id", _childId),
                 new KeyValuePair<string, string>("repeat", ""),
                 new KeyValuePair<string, string>("start", ""),
                 new KeyValuePair<string, string>("end", "")
             });
-            string resultString = await GetPostResultAsync("/ling2/server/actions/init_session.php", content);
-            var JSONResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString);
+            var resultString = await GetPostResultAsync("/ling2/server/actions/init_session.php", content);
+            var jsonResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString);
             Debug("JSONResponse from POST /ling2/server/actions/init_session.php: " + resultString);
-            if ((bool)JSONResponse["is_new"])
-                return true;
-            return false;
+            return (bool)jsonResponse["is_new"];
         }
         /// <summary>
         /// Generates the next word.
@@ -244,13 +237,13 @@ namespace InstaShitCore
         {
             var content = new FormUrlEncodedContent(new[]
             {
-                new KeyValuePair<string, string>("child_id", childID),
-                new KeyValuePair<string, string>("date", GetJSTime().ToString())
+                new KeyValuePair<string, string>("child_id", _childId),
+                new KeyValuePair<string, string>("date", GetJsTime().ToString())
             });
-            string resultString = await GetPostResultAsync("/ling2/server/actions/generate_next_word.php", content);
+            var resultString = await GetPostResultAsync("/ling2/server/actions/generate_next_word.php", content);
             Debug("Result from generate_next_word.php: " + resultString);
-            var JSONResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString);
-            return JSONResponse;
+            var jsonResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString);
+            return jsonResponse;
         }
         /// <summary>
         /// Attempts to answer the question.
@@ -261,36 +254,32 @@ namespace InstaShitCore
         {
             var content = new FormUrlEncodedContent(new[]
             {
-                new KeyValuePair<string, string>("child_id", childID),
-                new KeyValuePair<string, string>("word_id", answer.WordID),
+                new KeyValuePair<string, string>("child_id", _childId),
+                new KeyValuePair<string, string>("word_id", answer.WordId),
                 new KeyValuePair<string, string>("version", "43yo4ihw"),
                 new KeyValuePair<string, string>("answer", answer.AnswerWord)
             });
             var resultString = await GetPostResultAsync("/ling2/server/actions/save_answer.php", content);
-            var JSONResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString);
-            if ((JSONResponse["grade"].ToString() == "1" && answer.Word == answer.AnswerWord)
-                || ((JSONResponse["grade"].ToString() == "0" || JSONResponse["grade"].ToString() == "2") && answer.Word != answer.AnswerWord))
-                return true;
-            else
-                return false;
+            var jsonResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(resultString);
+            return (jsonResponse["grade"].ToString() == "1" && answer.Word == answer.AnswerWord)
+                   || ((jsonResponse["grade"].ToString() == "0" || jsonResponse["grade"].ToString() == "2") && answer.Word != answer.AnswerWord);
         }
         /// <summary>
         /// Checks if the answer to the question about the specified word should be correct or not.
         /// </summary>
-        /// <param name="wordID">ID of the word to check.</param>
+        /// <param name="wordId">ID of the word to check.</param>
         /// <returns>True if the answer should be correct; otherwise, false.</returns>
-        private bool AnswerCorrectly(string wordID)
+        private bool AnswerCorrectly(string wordId)
         {
-            if (sessionCount[wordID] != -1 && wordsCount[wordID] != -1 && sessionCount[wordID] < settings.IntelligentMistakesData.Count
-                && wordsCount[wordID] < settings.IntelligentMistakesData[sessionCount[wordID]].Count
-                && (settings.IntelligentMistakesData[sessionCount[wordID]][wordsCount[wordID]].MaxNumberOfMistakes == -1
-                || mistakesCount[sessionCount[wordID]][wordsCount[wordID]] < settings.IntelligentMistakesData[sessionCount[wordID]][wordsCount[wordID]].MaxNumberOfMistakes))
-            {
-                int rndPercentage = rndGenerator.Next(1, 101);
-                if (rndPercentage <= settings.IntelligentMistakesData[sessionCount[wordID]][wordsCount[wordID]].RiskPercentage)
-                    return false;
-            }
-            return true;
+            if (_sessionCount[wordId] == -1 || _wordsCount[wordId] == -1 ||
+                _sessionCount[wordId] >= _settings.IntelligentMistakesData.Count ||
+                _wordsCount[wordId] >= _settings.IntelligentMistakesData[_sessionCount[wordId]].Count ||
+                (_settings.IntelligentMistakesData[_sessionCount[wordId]][_wordsCount[wordId]].MaxNumberOfMistakes !=
+                 -1 && _mistakesCount[_sessionCount[wordId]][_wordsCount[wordId]] >=
+                 _settings.IntelligentMistakesData[_sessionCount[wordId]][_wordsCount[wordId]].MaxNumberOfMistakes))
+                return true;
+            var rndPercentage = _rndGenerator.Next(1, 101);
+            return rndPercentage > _settings.IntelligentMistakesData[_sessionCount[wordId]][_wordsCount[wordId]].RiskPercentage;
         }
         /// <summary>
         /// Gets the time to wait before continuing.
@@ -298,7 +287,7 @@ namespace InstaShitCore
         /// <returns>The number of miliseconds to wait.</returns>
         public int GetSleepTime()
         {
-            return rndGenerator.Next(settings.MinimumSleepTime, settings.MaximumSleepTime + 1);
+            return _rndGenerator.Next(_settings.MinimumSleepTime, _settings.MaximumSleepTime + 1);
         }
         /// <summary>
         /// Gets the information about the answer to the question.
@@ -310,30 +299,30 @@ namespace InstaShitCore
             if (wordData.ContainsKey("summary"))
                 return null;
             var word = wordData["word"].ToString();
-            var wordID = wordData["id"].ToString();
-            Answer answer = new Answer
+            var wordId = wordData["id"].ToString();
+            var answer = new Answer
             {
-                WordID = wordID,
+                WordId = wordId,
                 Word = word
             };
-            if (!wordsCount.ContainsKey(wordID))
-                wordsCount.Add(wordID, 0);
-            if (!words.ContainsKey(word))
-                words.Add(word, wordData["translations"].ToString());
-            if (!sessionCount.ContainsKey(wordID))
-                sessionCount.Add(wordID, 0);
-            bool correctAnswer = AnswerCorrectly(wordID);
+            if (!_wordsCount.ContainsKey(wordId))
+                _wordsCount.Add(wordId, 0);
+            if (!_words.ContainsKey(word))
+                _words.Add(word, wordData["translations"].ToString());
+            if (!_sessionCount.ContainsKey(wordId))
+                _sessionCount.Add(wordId, 0);
+            var correctAnswer = AnswerCorrectly(wordId);
             if (!correctAnswer)
             {
-                mistakesCount[sessionCount[wordID]][wordsCount[wordID]]++;
-                wordsCount[wordID]++;
+                _mistakesCount[_sessionCount[wordId]][_wordsCount[wordId]]++;
+                _wordsCount[wordId]++;
                 answer.AnswerWord = await GetWrongWord(word);
             }
             else
             {
-                if (wordsCount[wordID] == 0)
-                    sessionCount[wordID] = -1;
-                wordsCount[wordID] = -1;
+                if (_wordsCount[wordId] == 0)
+                    _sessionCount[wordId] = -1;
+                _wordsCount[wordId] = -1;
                 answer.AnswerWord = word;
             }
             return answer;
@@ -343,11 +332,11 @@ namespace InstaShitCore
         /// </summary>
         public void SaveSessionData()
         {
-            foreach (var key in sessionCount.Keys.ToList())
-                if (sessionCount[key] != -1)
-                    sessionCount[key]++;
-            File.WriteAllText(GetFileLocation("wordsHistory.json"), JsonConvert.SerializeObject(sessionCount, Formatting.Indented));
-            File.WriteAllText(GetFileLocation("wordsDictionary.json"), JsonConvert.SerializeObject(words, Formatting.Indented));
+            foreach (var key in _sessionCount.Keys.ToList())
+                if (_sessionCount[key] != -1)
+                    _sessionCount[key]++;
+            File.WriteAllText(GetFileLocation("wordsHistory.json"), JsonConvert.SerializeObject(_sessionCount, Formatting.Indented));
+            File.WriteAllText(GetFileLocation("wordsDictionary.json"), JsonConvert.SerializeObject(_words, Formatting.Indented));
         }
     }
 }

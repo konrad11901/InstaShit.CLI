@@ -25,7 +25,7 @@ namespace InstaShit
         {
             if (ignoreSettings || !File.Exists(GetFileLocation("settings.json")))
                 return GetSettingsFromUser(ignoreSettings);
-            return base.GetSettings(ignoreSettings);
+            return base.GetSettings(false);
         }
         /// <summary>
         /// Gets the InstaShit's settings from user's input.
@@ -38,7 +38,7 @@ namespace InstaShit
                 Console.WriteLine("Please enter the folllowing values:");
             else
                 Console.WriteLine("Can't find settings file, please enter the following values:");
-            Settings settings = new Settings
+            var settings = new Settings
             {
                 Login = GetStringFromUser("Login"),
                 Password = GetStringFromUser("Password"),
@@ -51,7 +51,7 @@ namespace InstaShit
             {
                 do
                 {
-                    int i = settings.IntelligentMistakesData.Count;
+                    var i = settings.IntelligentMistakesData.Count;
                     settings.IntelligentMistakesData.Add(new List<IntelligentMistakesDataEntry>());
                     do
                     {
@@ -83,7 +83,7 @@ namespace InstaShit
         }
         protected override string GetFileLocation(string fileName)
         {
-            string assemblyLocation = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            var assemblyLocation = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             return Path.Combine(assemblyLocation, fileName);
         }
         /// <summary>

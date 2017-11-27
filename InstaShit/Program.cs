@@ -1,21 +1,22 @@
 ﻿// InstaShit - Bot for Instaling which automatically solves daily tasks
 // Created by Konrad Krawiec
 using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using InstaShitCore;
 
 namespace InstaShit
 {
-    class Program
+    internal class Program
     {
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             Console.WriteLine("InstaShit - Bot for Instaling which automatically solves daily tasks");
             Console.WriteLine("Created by Konrad Krawiec\n");
             bool ignoreSettings = false, noUserInteraction = false;
-            foreach(string arg in args)
+            foreach(var arg in args)
             {
-                switch(arg.ToLower())
+                switch (arg.ToLower())
                 {
                     case "-ignoresettings":
                         ignoreSettings = true;
@@ -23,58 +24,64 @@ namespace InstaShit
                     case "-nouserinteraction":
                         noUserInteraction = true;
                         break;
+                    default:
+                        Console.WriteLine($"Unknown argument: {arg.ToLower()}");
+                        break;
                 }
             }
-            InstaShit instaShit = new InstaShit(ignoreSettings);
-            if (await instaShit.TryLoginAsync())
-                Console.WriteLine("Successfully logged in!");
-            else
+            try
             {
-                Console.WriteLine("Login failed!");
-                return;
-            }
-            if (await instaShit.IsNewSession())
-                Console.WriteLine("Starting new session");
-            else
-            {
-                Console.WriteLine("It looks like session was already started. Inteligent mistake making may be inaccurate.");
-                if(!noUserInteraction)
-                {
-                    Console.Write("Continue (y/n)? ");
-                    if (!UserInput.CanContinue()) return;
-                }
-            }
-            while(true)
-            {
-                Answer answer = await instaShit.GetAnswer();
-                if (answer == null)
-                    break;
-                int sleepTime = instaShit.GetSleepTime();
-                Console.WriteLine($"Sleeping... ({sleepTime}ms)");
-                await Task.Delay(sleepTime);
-                bool correctAnswer = answer.Word == answer.AnswerWord ? true : false;
-                if(correctAnswer)
-                {
-                    Console.Write("Attempting to answer");
-                }
+                var instaShit = new InstaShit(ignoreSettings);
+                if (await instaShit.TryLoginAsync())
+                    Console.WriteLine("Successfully logged in!");
                 else
                 {
-                    Console.Write($"Attempting to incorrectly answer (\"{answer.AnswerWord}\")");
-                }
-                Console.WriteLine($" question about word \"{answer.Word}\" with id {answer.WordID}");
-                if(await instaShit.TryAnswerQuestion(answer))
-                    Console.WriteLine("Success!");
-                else
-                {
-                    Console.WriteLine("Oops, something went wrong :( \n Please report this error to the bot's author.");
+                    Console.WriteLine("Login failed!");
                     return;
                 }
+                if (await instaShit.IsNewSession())
+                    Console.WriteLine("Starting new session");
+                else
+                {
+                    Console.WriteLine(
+                        "It looks like session was already started. Inteligent mistake making may be inaccurate.");
+                    if (!noUserInteraction)
+                    {
+                        Console.Write("Continue (y/n)? ");
+                        if (!UserInput.CanContinue()) return;
+                    }
+                }
+                while (true)
+                {
+                    var answer = await instaShit.GetAnswer();
+                    if (answer == null)
+                        break;
+                    var sleepTime = instaShit.GetSleepTime();
+                    Console.WriteLine($"Sleeping... ({sleepTime}ms)");
+                    await Task.Delay(sleepTime);
+                    var correctAnswer = answer.Word == answer.AnswerWord;
+                    Console.Write(correctAnswer
+                        ? "Attempting to answer"
+                        : $"Attempting to incorrectly answer (\"{answer.AnswerWord}\")");
+                    Console.WriteLine($" question about word \"{answer.Word}\" with id {answer.WordId}");
+                    if (await instaShit.TryAnswerQuestion(answer))
+                        Console.WriteLine("Success!");
+                    else
+                    {
+                        Console.WriteLine("Oops, something went wrong while trying to answer the question.\nPlease report this error to the bot's author.");
+                        return;
+                    }
+                }
+                Console.WriteLine("Session successfully finished.");
+                PrintResults(await instaShit.GetResultsAsync());
+                Console.WriteLine("Saving session data...");
+                instaShit.SaveSessionData();
+                Console.WriteLine("FINISHED");
             }
-            Console.WriteLine("Session successfully finished.");
-            PrintResults(await instaShit.GetResultsAsync());
-            Console.WriteLine("Saving session data...");
-            instaShit.SaveSessionData();
-            Console.WriteLine("FINISHED");
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine($"An error occured while connecting to InstaLing. Please check your network connection ({e.Message}).");
+            }
             Console.WriteLine("Press any key to close InstaShit...");
             Console.ReadKey();
         }
@@ -82,7 +89,7 @@ namespace InstaShit
         /// Prints results of today's training.
         /// </summary>
         /// <param name="childResults">Results of today's training.</param>
-        static void PrintResults(ChildResults childResults)
+        private static void PrintResults(ChildResults childResults)
         {
             Console.WriteLine();
             if (childResults.PreviousMark != "NONE")
