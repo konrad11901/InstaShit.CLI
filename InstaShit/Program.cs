@@ -11,17 +11,21 @@ namespace InstaShit
     {
         private static async Task Main(string[] args)
         {
-            Console.WriteLine("InstaShit - Bot for Instaling which automatically solves daily tasks");
+            Console.WriteLine("InstaShit - Bot for Insta.Ling which automatically solves daily tasks");
             Console.WriteLine("Created by Konrad Krawiec\n");
             bool ignoreSettings = false, noUserInteraction = false;
             foreach(var arg in args)
             {
                 switch (arg.ToLower())
                 {
-                    case "-ignoresettings":
+                    case "-ignore-settings":
+                    case "--ignore-settings":
+                    case "-i":
                         ignoreSettings = true;
                         break;
-                    case "-nouserinteraction":
+                    case "-no-user-interaction":
+                    case "--no-user-interaction":
+                    case "-q":
                         noUserInteraction = true;
                         break;
                     default:
@@ -39,12 +43,12 @@ namespace InstaShit
                     Console.WriteLine("Login failed!");
                     return;
                 }
-                if (await instaShit.IsNewSession())
+                if (await instaShit.IsNewSessionAsync())
                     Console.WriteLine("Starting new session");
                 else
                 {
                     Console.WriteLine(
-                        "It looks like session was already started. Inteligent mistake making may be inaccurate.");
+                        "It looks like session has been already started. Inteligent mistake making may be inaccurate.");
                     if (!noUserInteraction)
                     {
                         Console.Write("Continue (y/n)? ");
@@ -53,10 +57,10 @@ namespace InstaShit
                 }
                 while (true)
                 {
-                    var answer = await instaShit.GetAnswer();
+                    var answer = await instaShit.GetAnswerAsync();
                     if (answer == null)
                         break;
-                    var sleepTime = instaShit.GetSleepTime();
+                    var sleepTime = instaShit.SleepTime;
                     Console.WriteLine($"Sleeping... ({sleepTime}ms)");
                     await Task.Delay(sleepTime);
                     var correctAnswer = answer.Word == answer.AnswerWord;
@@ -64,7 +68,7 @@ namespace InstaShit
                         ? "Attempting to answer"
                         : $"Attempting to incorrectly answer (\"{answer.AnswerWord}\")");
                     Console.WriteLine($" question about word \"{answer.Word}\" with id {answer.WordId}");
-                    if (await instaShit.TryAnswerQuestion(answer))
+                    if (await instaShit.TryAnswerQuestionAsync(answer))
                         Console.WriteLine("Success!");
                     else
                     {

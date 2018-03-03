@@ -12,7 +12,7 @@ namespace InstaShit
 {
     public class InstaShit : InstaShitCore.InstaShitCore
     {
-        public InstaShit(bool ignoreSettings = false) : base(ignoreSettings)
+        public InstaShit(bool ignoreSettings = false) : base(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), ignoreSettings)
         {
 
         }
@@ -80,11 +80,6 @@ namespace InstaShit
                     File.WriteAllText(GetFileLocation("settings.json"), JsonConvert.SerializeObject(settings, Formatting.Indented));
             }
             return settings;
-        }
-        protected override string GetFileLocation(string fileName)
-        {
-            var assemblyLocation = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            return Path.Combine(assemblyLocation, fileName);
         }
         /// <summary>
         /// Writes the specified string value to the standard output stream if debug mode is turned on.
