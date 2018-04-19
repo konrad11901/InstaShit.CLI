@@ -5,9 +5,7 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <Authors>Konrad Krawiec</Authors>
     <Company />
-    <RuntimeIdentifiers>win-x86;win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
-    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <ReleaseVersion>2.1.1</ReleaseVersion>
+    <AssemblyVersion>2.2</AssemblyVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -20,7 +18,7 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="InstaShitCore" Version="1.0.6" />
+    <PackageReference Include="InstaShitCore" Version="1.0.7" />
   </ItemGroup>
 
   <ItemGroup>
