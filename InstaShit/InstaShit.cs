@@ -12,27 +12,32 @@ namespace InstaShit
 {
     public class InstaShit : InstaShitCore.InstaShitCore
     {
-        public InstaShit(bool ignoreSettings = false) : base(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), ignoreSettings)
+        private static readonly string baseLocation = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+
+        public InstaShit(bool ignoreSettings)
+            : base(GetSettings(ignoreSettings), GetWordsDictionary(baseLocation), GetWordsHistory(baseLocation))
         {
 
         }
+
+        private static string GetFileLocation(string fileName) => Path.Combine(baseLocation, fileName);
         /// <summary>
         /// Gets the InstaShit's settings from settings file or user's input.
         /// </summary>
         /// <param name="ignoreSettings">Specifies if the settings file should be ignored.</param>
         /// <returns>The object of Settings class with loaded values.</returns>
-        protected override Settings GetSettings(bool ignoreSettings)
+        public static Settings GetSettings(bool ignoreSettings)
         {
             if (ignoreSettings || !File.Exists(GetFileLocation("settings.json")))
                 return GetSettingsFromUser(ignoreSettings);
-            return base.GetSettings(false);
+            return GetSettings(baseLocation);
         }
         /// <summary>
         /// Gets the InstaShit's settings from user's input.
         /// </summary>
         /// <param name="ignoreSettings">Specifies if the settings file should be ignored.</param>
         /// <returns>The object of Settings class with loaded values.</returns>
-        private Settings GetSettingsFromUser(bool ignoreSettings)
+        private static Settings GetSettingsFromUser(bool ignoreSettings)
         {
             if (ignoreSettings)
                 Console.WriteLine("Please enter the folllowing values:");
@@ -81,6 +86,12 @@ namespace InstaShit
             }
             return settings;
         }
+
+        public void SaveSessionData()
+        {
+            SaveSessionData(baseLocation);
+        }
+
         /// <summary>
         /// Writes the specified string value to the standard output stream if debug mode is turned on.
         /// </summary>
