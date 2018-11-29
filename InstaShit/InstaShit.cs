@@ -40,7 +40,7 @@ namespace InstaShit
         private static Settings GetSettingsFromUser(bool ignoreSettings)
         {
             if (ignoreSettings)
-                Console.WriteLine("Please enter the folllowing values:");
+                Console.WriteLine("Please enter the following values:");
             else
                 Console.WriteLine("Can't find settings file, please enter the following values:");
             var settings = new Settings
