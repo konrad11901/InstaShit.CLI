@@ -5,8 +5,9 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <Authors>Konrad Krawiec</Authors>
     <Company />
-    <AssemblyVersion>2.3.0</AssemblyVersion>
-    <FileVersion>2.3.0</FileVersion>
+    <AssemblyVersion>2.3.2</AssemblyVersion>
+    <FileVersion>2.3.2</FileVersion>
+    <Version>2.3.2</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -18,7 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="InstaShitCore" Version="1.1.1" />
+    <PackageReference Include="InstaShitCore" Version="1.1.3" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
   </ItemGroup>
 
