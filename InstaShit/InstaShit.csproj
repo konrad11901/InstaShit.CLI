@@ -5,9 +5,9 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <Authors>Konrad Krawiec</Authors>
     <Company />
-    <AssemblyVersion>2.3.3</AssemblyVersion>
-    <FileVersion>2.3.3</FileVersion>
-    <Version>2.3.3</Version>
+    <AssemblyVersion>2.3.4</AssemblyVersion>
+    <FileVersion>2.3.4</FileVersion>
+    <Version>2.3.4</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
