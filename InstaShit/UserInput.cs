@@ -1,4 +1,4 @@
-﻿// InstaShit - Bot for Instaling which automatically solves daily tasks
+﻿// InstaShit - Bot for Insta.Ling which automatically solves daily tasks
 // Created by Konrad Krawiec
 using System;
 

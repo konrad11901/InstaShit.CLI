@@ -1,4 +1,4 @@
-﻿// InstaShit - Bot for Instaling which automatically solves daily tasks
+﻿// InstaShit - Bot for Insta.Ling which automatically solves daily tasks
 // Created by Konrad Krawiec
 using System;
 using System.Net.Http;
@@ -78,7 +78,7 @@ namespace InstaShit
                 else
                 {
                     Console.WriteLine(
-                        "It looks like session has been already started. Inteligent mistake making may be inaccurate.");
+                        "It looks like session has been already started. Intelligent mistake making may be inaccurate.");
                     if (!noUserInteraction)
                     {
                         Console.Write("Continue (y/n)? ");
@@ -115,7 +115,7 @@ namespace InstaShit
             }
             catch (HttpRequestException e)
             {
-                Console.WriteLine($"An error occured while connecting to InstaLing. Please check your network connection ({e.Message}).");
+                Console.WriteLine($"An error occured while connecting to Insta.Ling. Please check your network connection ({e.Message}).");
             }
             Console.WriteLine("Press any key to close InstaShit...");
             Console.ReadKey();

@@ -1,4 +1,4 @@
-﻿// InstaShit - Bot for Instaling which automatically solves daily tasks
+﻿// InstaShit - Bot for Insta.Ling which automatically solves daily tasks
 // Created by Konrad Krawiec
 using System;
 using System.Collections.Generic;
@@ -39,18 +39,17 @@ namespace InstaShit
         /// <returns>The object of Settings class with loaded values.</returns>
         private static Settings GetSettingsFromUser(bool ignoreSettings)
         {
-            if (ignoreSettings)
-                Console.WriteLine("Please enter the following values:");
-            else
-                Console.WriteLine("Can't find settings file, please enter the following values:");
+            Console.WriteLine(ignoreSettings
+                ? "Please enter the following values:"
+                : "Can't find settings file, please enter the following values:");
             var settings = new Settings
             {
                 Login = GetStringFromUser("Login"),
                 Password = GetStringFromUser("Password"),
-                MinimumSleepTime = GetIntFromUser("Minimum sleep time (in miliseconds)", 0, Int32.MaxValue),
+                MinimumSleepTime = GetIntFromUser("Minimum sleep time (in milliseconds)", 0, Int32.MaxValue),
                 IntelligentMistakesData = new List<List<IntelligentMistakesDataEntry>>()
             };
-            settings.MaximumSleepTime = GetIntFromUser("Maximum sleep time (in miliseconds)", settings.MinimumSleepTime, Int32.MaxValue);
+            settings.MaximumSleepTime = GetIntFromUser("Maximum sleep time (in milliseconds)", settings.MinimumSleepTime, Int32.MaxValue);
             Console.Write("Specify IntelligentMistakesData for session number 1 (y/n)? ");
             if (CanContinue())
             {
