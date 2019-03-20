@@ -78,7 +78,7 @@ namespace InstaShit
                 else
                 {
                     Console.WriteLine(
-                        "It looks like session has been already started. Intelligent mistake making may be inaccurate.");
+                        "It looks like session has already been started. Intelligent mistake making may be inaccurate.");
                     if (!noUserInteraction)
                     {
                         Console.Write("Continue (y/n)? ");
