@@ -32,6 +32,7 @@ namespace InstaShit
                 return GetSettingsFromUser(ignoreSettings);
             return GetSettings(baseLocation);
         }
+
         /// <summary>
         /// Gets the InstaShit's settings from user's input.
         /// </summary>

@@ -23,6 +23,7 @@ namespace InstaShit
                 Console.WriteLine("Wrong input, try again.");
             }
         }
+
         /// <summary>
         /// Gets the string from user's input.
         /// </summary>
@@ -33,6 +34,7 @@ namespace InstaShit
             Console.Write($"{valueName}: ");
             return Console.ReadLine();
         }
+
         /// <summary>
         /// Checks if the program can continue with its work.
         /// </summary>
