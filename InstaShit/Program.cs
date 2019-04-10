@@ -73,12 +73,15 @@ namespace InstaShit
                     Console.WriteLine("Login failed!");
                     return;
                 }
+                if (instaShit.LatestInstaLingVersion != InstaShitCore.InstaShitCore.DefaultInstaLingVersion)
+                    Console.WriteLine("Warning: Insta.Ling has been updated since last InstaShit.CLI update. " +
+                        "There might be some problems with solving the session.");
                 if (await instaShit.IsNewSessionAsync())
                     Console.WriteLine("Starting new session");
                 else
                 {
                     Console.WriteLine(
-                        "It looks like session has already been started. Intelligent mistake making may be inaccurate.");
+                        "It looks like the session has already been started. Intelligent mistake making may be inaccurate.");
                     if (!noUserInteraction)
                     {
                         Console.Write("Continue (y/n)? ");
@@ -120,6 +123,7 @@ namespace InstaShit
             Console.WriteLine("Press any key to close InstaShit...");
             Console.ReadKey();
         }
+
         /// <summary>
         /// Prints results of today's training.
         /// </summary>
